@@ -5,11 +5,13 @@ type node struct {
 	indices  string
 	children []*node
 	value    interface{}
+	priority uint32
 }
 
 type PrefixTree struct {
-	root *node
-	size int
+	root           *node
+	size           int
+	EnablePriority bool
 }
 
 func (t *PrefixTree) Insert(k string, v interface{}) bool {
@@ -20,12 +22,15 @@ func (t *PrefixTree) Insert(k string, v interface{}) bool {
 			indices:  "",
 			children: []*node{},
 			value:    v,
+			priority: 1,
 		}
+		t.size++
 		return true
 	}
 
 	// insert key-value into tree
 	p := t.root
+	p.priority++
 walk:
 	for {
 		l := longestCommonPrefix(k, p.str)
@@ -37,6 +42,7 @@ walk:
 				indices:  p.indices,
 				children: p.children,
 				value:    p.value,
+				priority: p.priority - 1,
 			}
 			p.str = p.str[:l]
 			p.indices = string([]byte{newNode.str[0]})
@@ -48,6 +54,9 @@ walk:
 			k = k[l:]
 			for i := range p.indices {
 				if k[0] == p.indices[i] {
+					if t.EnablePriority {
+						i = incrementChildPriority(p, i)
+					}
 					p = p.children[i]
 					continue walk
 				}
@@ -60,11 +69,14 @@ walk:
 			}
 			p.indices += k[0:1]
 			p.children = append(p.children, newNode)
+			if t.EnablePriority {
+				incrementChildPriority(p, len(p.children)-1)
+			}
 			t.size++
 			return true
 		}
 
-		// node about key already in tree
+		// insert key already in tree
 		if p.value != nil {
 			// duplicate key
 			return false
@@ -85,10 +97,12 @@ walk:
 	for {
 		l := longestCommonPrefix(k, p.str)
 
+		// now str is not key's prefix
 		if l < len(p.str) {
 			return nil, false
 		}
 
+		// now str is key's prefix
 		if l < len(k) {
 			k = k[l:]
 			for i := range p.indices {
@@ -100,10 +114,8 @@ walk:
 			return nil, false
 		}
 
-		if p.str == k {
-			return p.value, true
-		}
-		return nil, false
+		// now str equals to key
+		return p.value, true
 	}
 }
 
@@ -159,6 +171,27 @@ walk:
 	}
 	t.size--
 	return true
+}
+
+func (t *PrefixTree) Size() int {
+	return t.size
+}
+
+func incrementChildPriority(p *node, i int) int {
+	p.children[i].priority++
+	oldPos := i
+	for ; i > 0; i-- {
+		if p.children[i].priority > p.children[i-1].priority {
+			p.children[i], p.children[i-1] = p.children[i-1], p.children[i]
+		} else {
+			break
+		}
+	}
+	if i != oldPos {
+		p.indices = p.indices[:i] + p.indices[oldPos:oldPos+1] + p.indices[i:oldPos] + p.indices[oldPos+1:]
+	}
+
+	return i
 }
 
 func longestCommonPrefix(a, b string) int {

@@ -1,15 +1,15 @@
 package gobar
 
-type node struct {
+type prefixTreeNode struct {
 	str      string
 	indices  string
-	children []*node
+	children []*prefixTreeNode
 	value    interface{}
 	priority uint32
 }
 
 type PrefixTree struct {
-	root           *node
+	root           *prefixTreeNode
 	size           int
 	EnablePriority bool
 }
@@ -17,10 +17,10 @@ type PrefixTree struct {
 func (t *PrefixTree) Insert(k string, v interface{}) bool {
 	if t.root == nil {
 		// init tree
-		t.root = &node{
+		t.root = &prefixTreeNode{
 			str:      k,
 			indices:  "",
-			children: []*node{},
+			children: []*prefixTreeNode{},
 			value:    v,
 			priority: 1,
 		}
@@ -37,7 +37,7 @@ walk:
 
 		// split node
 		if l < len(p.str) {
-			newNode := &node{
+			newNode := &prefixTreeNode{
 				str:      p.str[l:],
 				indices:  p.indices,
 				children: p.children,
@@ -46,7 +46,7 @@ walk:
 			}
 			p.str = p.str[:l]
 			p.indices = string([]byte{newNode.str[0]})
-			p.children = []*node{newNode}
+			p.children = []*prefixTreeNode{newNode}
 			p.value = nil
 		}
 
@@ -61,10 +61,10 @@ walk:
 					continue walk
 				}
 			}
-			newNode := &node{
+			newNode := &prefixTreeNode{
 				str:      k,
 				indices:  "",
-				children: []*node{},
+				children: []*prefixTreeNode{},
 				value:    v,
 			}
 			p.indices += k[0:1]
@@ -123,7 +123,7 @@ func (t *PrefixTree) Delete(k string) bool {
 	if t.root == nil {
 		return false
 	}
-	var st []*node
+	var st []*prefixTreeNode
 	var indexSt []int
 	p := t.root
 walk:
@@ -177,7 +177,7 @@ func (t *PrefixTree) Size() int {
 	return t.size
 }
 
-func incrementChildPriority(p *node, i int) int {
+func incrementChildPriority(p *prefixTreeNode, i int) int {
 	p.children[i].priority++
 	oldPos := i
 	for ; i > 0; i-- {

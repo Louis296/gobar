@@ -18,8 +18,11 @@ func lc1024(nums []int, ops []byte) [][]string {
 	var list [3]string
 	var dfs func([]int, []byte, [3]string, int)
 	dfs = func(nums []int, ops []byte, list [3]string, p int) {
-		for i := 0; i < len(nums)-1 && len(ans) == 0; i++ {
-			for j := i + 1; j < len(nums) && len(ans) == 0; j++ {
+		for i := 0; i < len(nums) && len(ans) == 0; i++ {
+			for j := 0; j < len(nums) && len(ans) == 0; j++ {
+				if j == i {
+					continue
+				}
 				for k, op := range ops {
 					a, b := nums[i], nums[j]
 					if op == '/' && b == 0 {

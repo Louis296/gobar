@@ -25,7 +25,7 @@ func lc1024(nums []int, ops []byte) [][]string {
 				}
 				for k, op := range ops {
 					a, b := nums[i], nums[j]
-					if op == '/' && b == 0 {
+					if (op == '/' || op == '%') && b == 0 {
 						continue
 					}
 					res, str := calc(a, b, op)
